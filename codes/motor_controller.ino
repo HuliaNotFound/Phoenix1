@@ -14,18 +14,16 @@
 #define rPwm2 4
 
 //bluetooth
-#define btTX 10
-#define btRX 11 //tutaj było wpisane 9 ale pod ten pin jest ren1 podpięte
+#define btTX 11
+#define btRX 10 
 
 BTS7960 motorController1(len1, ren1, lPwm1, rPwm1);
 BTS7960 motorController2(len2, ren2, lPwm2, rPwm2);
-SoftwareSerial bt(btTX, btRX);
+SoftwareSerial bt(btRX, btTX);
 
 char cmd[10]; //tablica do poleceń
 char c; //wpisywany znak do tablicy
 int cmdIndex = 0; //indeks do tablicy
-
-
 
 void setup() {
   Serial.begin(9600);
@@ -38,14 +36,13 @@ void cmdExe()
   if(cmd[0] == 'l')
   {
     float val = atof(cmd + 2);
-    //Serial.println(val);
     if(val > 0) //jazda w przód
     {
-      motorController1.TurnLeft(val*2);
+        motorController1.TurnLeft(val);
     }
     else if(val < 0) //jazda w tył
     {
-      motorController1.TurnRight((-val)*2);
+      motorController1.TurnRight(-val);
     }
     else
     {
@@ -55,29 +52,32 @@ void cmdExe()
   else if(cmd[0] == '1') //przycisk do zatrzymania silnika 1
   {
     motorController1.Stop();
+    motorController1.Disable();
+    motorController2.Disable();
   }
 
   //ruch prawym sliderem -> silnik 2 przód/tył
   if(cmd[0] == 'r')
   {
     float val = atof(cmd + 2);
-    //Serial.println(val);
     if(val > 0) //jazda w przód
     {
-      motorController2.TurnLeft(val*2);
+      motorController2.TurnLeft(val);
     }
     else if(val < 0) //jazda w tył
     {
-      motorController2.TurnRight((-val)*2);
+      motorController2.TurnRight(-val);
     }
     else
     {
       motorController2.Stop();
     }
   }
-  else if(cmd[0] == '3') //przycisk do zatrzymania silnika 1
+  else if(cmd[0] == '1') //przycisk do zatrzymania silnika 1
   {
     motorController2.Stop();
+    motorController1.Disable();
+    motorController2.Disable();
   }
 }
 
@@ -94,11 +94,12 @@ void loop() {
     {
       cmd[cmdIndex] = c;
       cmdExe();
-      cmdIndex = 0;
+      delay(1);
       for(int i = 0; i < cmdIndex; i++)
       {
         cmd[i] = 0;
       }
+      cmdIndex = 0;
     }
     else //jeśli polecenie w trakcie
     {
@@ -109,7 +110,4 @@ void loop() {
       }
     }
   }
-
-  motorController1.Disable();
-  motorController2.Disable();
 }
